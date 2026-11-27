@@ -1,0 +1,40 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write # push tags, create releases
+  packages: write # push to ghcr
+
+concurrency: release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0 # svu and goreleaser read tags and history
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go.mod
+      - id: version
+        run: |
+          svu="go run github.com/caarlos0/svu/v3@v3.4.4"
+          current=$($svu current)
+          next=$($svu next --v0)
+          if [ "$current" != "$next" ]; then
+            git tag "$next"
+            git push origin "$next"
+            echo "tag=$next" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.version.outputs.tag != ''
+        uses: goreleaser/goreleaser-action@v7.3.0
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

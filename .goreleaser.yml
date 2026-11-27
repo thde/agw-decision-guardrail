@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+version: 2
+env:
+  - KO_DOCKER_REPO=ghcr.io/{{ .Env.GITHUB_REPOSITORY }}
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    mod_timestamp: "{{ .CommitTimestamp }}"
+report_sizes: true
+kos:
+  - main: .
+    base_image: cgr.dev/chainguard/static
+    bare: true
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    tags:
+      - latest
+      - "{{.Tag}}"
+    creation_time: "{{.CommitTimestamp}}"

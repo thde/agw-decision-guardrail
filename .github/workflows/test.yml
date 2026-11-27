@@ -1,0 +1,41 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go test -race -cover ./...
+      - uses: goreleaser/goreleaser-action@v7.3.0
+        with:
+          version: "~> v2"
+          args: build --clean --snapshot
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go mod tidy -diff
+      # Also runs govet, staticcheck and modernize (see .golangci.toml).
+      - uses: golangci/golangci-lint-action@v9.3.0
+        with:
+          version: v2.15.0
+      - uses: golang/govulncheck-action@v1.1.0
+        with:
+          repo-checkout: false
+      - run: go run github.com/kojah/gohawk@v0.8.1 ./...
+      - uses: crate-ci/typos@v1.52.2

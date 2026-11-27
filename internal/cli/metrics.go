@@ -9,7 +9,8 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 )
 
-// instrumentHandler records requests to next. next must be a *http.ServeMux:
+// instrumentHandler records requests to next.
+// It requires next to be a *http.ServeMux:
 // it sets r.Pattern, which bounds label cardinality.
 func instrumentHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
